@@ -53,9 +53,9 @@ io.on("connection", socket => {
 
     console.log("ID de usuário conectado: " + socket.id) //pra ligar o socketIO
 
-    socket.emit("previousPost", posts); //emite as mensagens
+    socket.emit("previousMessage", posts); //emite as mensagens
 
-    socket.on("sendPost", data => {
+    socket.on("sendMessage", (data) => {
 
         //messages.push(data); --> posição de fila ou pilha => o último que entra é o primeiro que sai
 
@@ -64,11 +64,13 @@ io.on("connection", socket => {
         //socket.broadcast.emit("receivedMessage", data);
 
         post.save()
-            .then(
-                socket.broadcast.emit('receivedPost', data)
-            ).catch(error => {
-                console.log('ERRO:' + error)
+            .then(() => {
+                socket.broadcast.emit('receivedMessage', data);
             })
+            .catch(error => {
+                console.log('ERRO:' + error);
+            });
+
 
     });
 

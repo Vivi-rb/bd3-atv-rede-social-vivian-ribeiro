@@ -19,8 +19,6 @@
 
 <body>
 
-    <script src="socket.io/socket.io.js"></script>
-
     <div class="header_container">
         <img src="./images/rede.png" />
         <h1>ATIVIDADE - REDE SOCIAL</h1>
@@ -30,7 +28,9 @@
         <button name="btn_post" id="btn_post">POST</button>
     </div>
 
-    <div class="posts_container"></div>
+    <div class="posts_container">
+        <div class="posts"></div>
+    </div>
 
     <!-- ESTRUTURA HTML DO FORMULÁRIO MODAL: -->
     <div id="myModal" class="modal">
@@ -49,7 +49,7 @@
                     <br />
                     <input type="text" name="txt_post" id="txt_post" placeholder="TEXTO DO POST">
                     <br />
-                    <button name="btn_postar" id="btn_postar" type="submit">POSTAR</button>
+                    <button name="btn_postar" id="btn_postar">POSTAR</button>
 
                 </form>
 
@@ -59,26 +59,95 @@
 
     </div>
 
+
+    <script>
+
+        const socket = io("http://localhost:3333")
+
+        function renderPost(postagem) {
+            const html = `
+    <div class="postagem">
+      <p><strong>${postagem.titulo}:</strong> ${postagem.texto}</p>
+      <span>${postagem.dataHora}</span>
+    </div>
+  `;
+            $('.posts').append(html);
+        }
+
+        socket.on('previousMessage', function (posts) {
+            for (postagem of posts) {
+                renderPost(postagem);
+            }
+        }); //todas as mensagens
+
+        socket.on('receivedMessage', function (postagem) {
+            renderPost(postagem);
+        }); //mensagens da vez
+
+        $('#frm_post').submit(function (event) {
+            event.preventDefault();
+
+
+            let titulo = $('input[name=txt_titulo]').val();
+            let texto = $('input[name=txt_post]').val();
+
+
+            if (titulo.length && texto.length) {
+
+
+
+                let data_hora_obj = new Date();
+
+                let dia = String(data_hora_obj.getDate()).padStart(2, '0');
+                let mes = String(data_hora_obj.getMonth() + 1).padStart(2, '0');
+                let ano = data_hora_obj.getFullYear();
+
+                let horas = String(data_hora_obj.getHours()).padStart(2, '0');
+                let minutos = String(data_hora_obj.getMinutes()).padStart(2, '0');
+                let segundos = String(data_hora_obj.getSeconds()).padStart(2, '0');
+
+
+                let data_hora_post = `[${dia}/${mes}/${ano} - ${horas}:${minutos}:${segundos}]`;
+
+
+                // let data_hora_post = `[${data_hora_obj.getDate()}/${data_hora_obj.getMonth()}/${data_hora_obj.getFullYear()}-${data_hora_obj.getHours()}:${data_hora_obj.getMinutes()}:${data_hora_obj.getSeconds()}]`;
+
+
+                var postObject = {
+                    titulo: titulo,
+                    dataHora: data_hora_post,
+                    texto: texto,
+                };
+                renderPost(postObject);
+
+                socket.emit('sendMessage', postObject);
+
+                $('#txt_titulo').val('');
+                $('#txt_post').val('');
+                modal.style.display = "none";
+            }
+
+
+        });
+
+        /***** ABERTURA/FECHAMENTO DO FORMUÁRIO MODAL *****/
+        let btn = document.getElementById('btn_post');
+        let modal = document.getElementById("myModal");
+        let span = document.getElementsByClassName("close")[0];
+
+        //ABRE O FORMULÁRIO MODAL:
+        btn.addEventListener('click', function (event) {
+            event.preventDefault();
+            modal.style.display = "block";
+        });
+
+        //FECHA O FORMULÁRIO MODAL:
+        span.addEventListener('click', function (event) {
+            modal.style.display = "none";
+        });
+
+    </script>
+
 </body>
-
-<script>
-
-    /***** ABERTURA/FECHAMENTO DO FORMUÁRIO MODAL *****/
-    let btn = document.getElementById('btn_post');
-    let modal = document.getElementById("myModal");
-    let span = document.getElementsByClassName("close")[0];
-
-    //ABRE O FORMULÁRIO MODAL:
-    btn.addEventListener('click', function (event) {
-        event.preventDefault();
-        modal.style.display = "block";
-    });
-
-    //FECHA O FORMULÁRIO MODAL:
-    span.addEventListener('click', function (event) {
-        modal.style.display = "none";
-    });
-
-</script>
 
 </html>
